@@ -52,8 +52,8 @@ const PLANS = [
 ];
 
 const CREDIT_PACKS = [
-  { id: 'pack_10', amount: '10 Prompts', price: 99, priceDisplay: '₹99', icon: <CreditCard className="h-5 w-5" />, credits: 10 },
-  { id: 'pack_100', amount: '100 Prompts', price: 299, priceDisplay: '₹299', icon: <CreditCard className="h-5 w-5" />, highlight: true, credits: 100 },
+  { id: 'pack_100', amount: '100 Prompts', price: 99, priceDisplay: '₹99', icon: <CreditCard className="h-5 w-5" />, credits: 100 },
+  { id: 'pack_unlimited', amount: 'Unlimited Prompts', price: 299, priceDisplay: '₹299', icon: <CreditCard className="h-5 w-5" />, highlight: true, credits: 999999 },
 ];
 
 export default function PricingPage() {
@@ -85,14 +85,34 @@ export default function PricingPage() {
     setLoadingId(planId);
 
     try {
+      // 1. Fetch Order ID from Next.js API
+      const response = await fetch('/api/razorpay', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          amount: amount * 100, // Amount in paisa
+          currency: 'INR',
+          receipt: `rcpt_${planId}_${user.uid.slice(0, 5)}`
+        }),
+      });
+
+      const orderData = await response.json();
+      if (!response.ok) throw new Error(orderData.error || "Order creation failed");
+
+      // 2. Setup Razorpay Options
       const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_dummy_key',
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Automatically uses the Test Key from .env
         amount: amount * 100,
         currency: "INR",
         name: "ChatPMT AI",
         description: `Purchase for ${name}`,
         image: "https://picsum.photos/seed/chatpmt/200/200",
+        order_id: orderData.orderId, // Secure Order ID required by recent Razorpay updates
         handler: async function (response: any) {
+          // Verify signature logic usually goes here on backend, but we run directly for testing.
+          
           // Update credits in Firestore
           const updatedCredits = creditsToAdd ? 10 + (creditsToAdd || 0) : 5000;
           
@@ -108,7 +128,7 @@ export default function PricingPage() {
           
           toast({
             title: "Payment Successful!",
-            description: `Your account has been upgraded! Credits: ${updatedCredits}`,
+            description: `Payment ID: ${response.razorpay_payment_id}. Your account has been upgraded!`,
           });
           
           setLoadingId(null);
@@ -121,21 +141,33 @@ export default function PricingPage() {
           email: user.email || "user@example.com",
         },
         theme: {
-          color: "#F5F5DC",
+          color: "#09090b", // Matches dark UI
         },
         modal: {
           ondismiss: function() {
             setLoadingId(null);
+            toast({
+              title: "Payment Cancelled",
+              description: "You closed the payment window.",
+            });
           }
         }
       };
 
       const rzp = new (window as any).Razorpay(options);
+      rzp.on('payment.failed', function (response: any){
+        toast({
+            title: "Payment Failed",
+            description: response.error.description,
+            variant: "destructive",
+        });
+        setLoadingId(null);
+      });
       rzp.open();
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Payment Error",
-        description: "Something went wrong. Please try again.",
+        description: error.message || "Something went wrong. Please try again.",
         variant: "destructive",
       });
       setLoadingId(null);
@@ -156,9 +188,9 @@ export default function PricingPage() {
         </p>
       </section>
 
-      <section className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8">
+      <section className="container mx-auto px-4 grid grid-cols-1 md:grid-cols-3 gap-8 items-center mt-8">
         {PLANS.map((plan) => (
-          <Card key={plan.id} className={`relative flex flex-col border-2 transition-soft hover-lift ${plan.highlight ? 'border-primary shadow-2xl scale-105 z-10 bg-white' : 'border-border bg-white'}`}>
+          <Card key={plan.id} className={`relative flex flex-col transition-all duration-300 ${plan.highlight ? 'border-2 border-primary shadow-2xl md:scale-105 z-10 bg-card text-card-foreground' : 'border border-border hover:border-primary/50 bg-card text-card-foreground hover:shadow-xl'}`}>
             {plan.badge && (
               <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                 <Badge variant={plan.highlight ? 'default' : 'secondary'} className="px-4 py-1 rounded-full uppercase font-bold tracking-wider bg-primary text-primary-foreground">
@@ -192,7 +224,7 @@ export default function PricingPage() {
             <CardFooter className="pb-8">
               <Button 
                 variant={plan.highlight ? 'default' : 'outline'} 
-                className={`w-full h-12 rounded-xl font-bold text-lg ${plan.highlight ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'border-primary text-primary-foreground hover:bg-primary/10'}`} 
+                className={`w-full h-12 rounded-xl font-bold text-lg transition-all ${plan.highlight ? 'bg-primary text-primary-foreground shadow-lg hover:shadow-primary/25 hover:bg-primary/90' : 'border-border hover:border-primary text-foreground hover:bg-primary/10'}`} 
                 size="lg"
                 disabled={loadingId === plan.id}
                 onClick={() => handlePayment(plan.id, plan.price, plan.name)}
@@ -204,8 +236,8 @@ export default function PricingPage() {
         ))}
       </section>
 
-      <section className="container mx-auto px-4 mt-24">
-        <div className="max-w-4xl mx-auto rounded-3xl bg-white border border-border p-8 md:p-12 shadow-xl">
+      <section className="container mx-auto px-4 mt-32">
+        <div className="max-w-4xl mx-auto rounded-3xl bg-card text-card-foreground border border-border p-8 md:p-14 shadow-2xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6 text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/20 text-primary border border-primary/20">
@@ -224,7 +256,7 @@ export default function PricingPage() {
             
             <div className="grid grid-cols-1 gap-4">
               {CREDIT_PACKS.map((pack) => (
-                <div key={pack.id} className={`p-6 rounded-2xl flex items-center justify-between border-2 transition-all hover-lift cursor-pointer ${pack.highlight ? 'bg-primary/10 border-primary shadow-lg' : 'bg-white border-border hover:border-primary/50'}`}>
+                <div key={pack.id} className={`p-6 rounded-2xl flex items-center justify-between border transition-all cursor-pointer ${pack.highlight ? 'bg-primary/10 border-primary shadow-lg ring-1 ring-primary/20' : 'bg-background hover:bg-muted/50 border-border hover:border-primary/50 hover:shadow-md'}`}>
                   <div className="flex items-center gap-4">
                     <div className={`p-3 rounded-xl ${pack.highlight ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
                       {pack.icon}

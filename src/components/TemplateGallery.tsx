@@ -113,10 +113,15 @@ export function TemplateGallery({ onSelect }: TemplateGalleryProps) {
         {TEMPLATES.map((template, idx) => (
           <Card 
             key={template.id} 
-            className="group relative overflow-hidden border-none shadow-xl hover:shadow-2xl transition-all duration-500 cursor-pointer bg-white/80 dark:bg-card backdrop-blur-md hover:-translate-y-2 active:scale-95 animate-in fade-in zoom-in-95"
+            className="group relative overflow-hidden border border-transparent hover:border-primary/30 shadow-xl hover:shadow-[0_0_40px_rgba(255,255,255,0.1)] dark:hover:shadow-[0_0_40px_rgba(255,255,255,0.1)] transition-all duration-500 cursor-pointer bg-white/80 dark:bg-card backdrop-blur-md hover:-translate-y-2 active:scale-95 animate-in fade-in zoom-in-95"
             style={{ animationDelay: `${idx * 100}ms` }}
             onClick={() => onSelect(template.presetIdea, template.presetType)}
           >
+            {/* Lightning Strike Sweep Effect */}
+            <div className="absolute inset-0 z-20 pointer-events-none overflow-hidden rounded-xl">
+              <div className="absolute inset-0 h-full w-[200%] bg-gradient-to-r from-transparent via-white/30 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-out skew-x-[-30deg] opacity-0 group-hover:opacity-100" />
+            </div>
+
             {/* Background Gradient Effect */}
             <div className={`absolute inset-0 bg-gradient-to-br ${template.color} dark:${template.darkColor} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
             

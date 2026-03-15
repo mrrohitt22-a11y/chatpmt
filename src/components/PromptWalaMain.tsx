@@ -73,8 +73,17 @@ const QUALITY_LEVELS = [
 
 const LANGUAGES = [
   { value: 'English', label: 'English' },
+  { value: 'Hindi', label: 'Hindi' },
   { value: 'Spanish', label: 'Spanish' },
   { value: 'French', label: 'French' },
+  { value: 'German', label: 'German' },
+  { value: 'Italian', label: 'Italian' },
+  { value: 'Portuguese', label: 'Portuguese' },
+  { value: 'Arabic', label: 'Arabic' },
+  { value: 'Japanese', label: 'Japanese' },
+  { value: 'Korean', label: 'Korean' },
+  { value: 'Russian', label: 'Russian' },
+  { value: 'Chinese', label: 'Chinese' },
 ];
 
 const AI_TARGETS = [
@@ -98,7 +107,7 @@ export function PromptWalaMain({ presetIdea, presetType }: PromptWalaMainProps) 
   const [idea, setIdea] = useState('');
   const [promptType, setPromptType] = useState('content writing');
   const [qualityLevel, setQualityLevel] = useState<'Basic' | 'Advanced' | 'Expert'>('Basic');
-  const [targetLanguage, setTargetLanguage] = useState<'English' | 'Spanish' | 'French'>('English');
+  const [targetLanguage, setTargetLanguage] = useState<string>('English');
   const [result, setResult] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isCopied, setIsCopied] = useState(false);

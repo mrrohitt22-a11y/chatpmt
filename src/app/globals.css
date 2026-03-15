@@ -55,10 +55,18 @@
   }
   html {
     scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   body {
-    @apply bg-background text-foreground font-body antialiased selection:bg-primary/50;
+    @apply bg-background text-foreground font-body selection:bg-primary/50;
     text-rendering: optimizeLegibility;
+    /* Hardware acceleration for ultra smooth rendering */
+    -webkit-transform: translate3d(0,0,0);
+    transform: translate3d(0,0,0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+    overscroll-behavior-y: none;
   }
 }
 

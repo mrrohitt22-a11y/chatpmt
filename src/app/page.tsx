@@ -121,8 +121,8 @@ export default function Home() {
           <div className="space-y-4">
             <h4 className="font-bold">Legal</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="#" className="hover:text-primary dark:hover:text-white transition-colors">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-primary dark:hover:text-white transition-colors">Terms of Service</a></li>
+              <li><a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-primary dark:hover:text-white transition-colors">Privacy Policy</a></li>
+              <li><a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:text-primary dark:hover:text-white transition-colors">Terms of Service</a></li>
             </ul>
           </div>
         </div>

@@ -14,8 +14,8 @@ import {z} from 'genkit';
 const DetectLanguageAndTranslatePromptInputSchema = z.object({
   text: z.string().describe('The input text to be translated.'),
   targetLanguage: z
-    .enum(['English', 'Spanish', 'French'])
-    .describe('The target language for the translated prompt.'),
+    .string()
+    .describe('The exact target language for the translated prompt (e.g. Hindi, Spanish, English).'),
 });
 export type DetectLanguageAndTranslatePromptInput = z.infer<
   typeof DetectLanguageAndTranslatePromptInputSchema
