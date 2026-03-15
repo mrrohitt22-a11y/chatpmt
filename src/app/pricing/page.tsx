@@ -8,8 +8,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Check, Zap, Star, Trophy, CreditCard, ShieldCheck, Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSupabaseAuth } from '@/hooks/use-supabase-auth';
-import { supabase } from '@/lib/supabase';
+import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
+import { useFirestore } from '@/firebase/provider';
+import { doc, updateDoc } from 'firebase/firestore';
 
 const PLANS = [
   {
@@ -58,7 +59,8 @@ const CREDIT_PACKS = [
 export default function PricingPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const { user } = useSupabaseAuth();
+  const { user } = useFirebaseAuth();
+  const firestore = useFirestore();
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   const handlePayment = async (planId: string, amount: number, name: string, creditsToAdd?: number) => {
@@ -90,16 +92,19 @@ export default function PricingPage() {
         name: "ChatPMT AI",
         description: `Purchase for ${name}`,
         image: "https://picsum.photos/seed/chatpmt/200/200",
-        handler: function (response: any) {
-          // Realistic logic: If it's a sub, give high credits, if pack, add specific amount
+        handler: async function (response: any) {
+          // Update credits in Firestore
           const updatedCredits = creditsToAdd ? 10 + (creditsToAdd || 0) : 5000;
           
-          supabase.from('userProfiles').update({
-            creditsBalance: updatedCredits,
-            updatedAt: new Date().toISOString()
-          }).eq('id', user.id).then(({ error }) => {
-            if (error) console.error("Error updating credits:", error);
-          });
+          try {
+            const profileRef = doc(firestore, 'userProfiles', user.uid);
+            await updateDoc(profileRef, {
+              creditsBalance: updatedCredits,
+              updatedAt: new Date().toISOString()
+            });
+          } catch (error) {
+            console.error("Error updating credits:", error);
+          }
           
           toast({
             title: "Payment Successful!",
@@ -112,7 +117,7 @@ export default function PricingPage() {
           }, 1500);
         },
         prefill: {
-          name: user.user_metadata?.full_name || "User",
+          name: user.displayName || "User",
           email: user.email || "user@example.com",
         },
         theme: {

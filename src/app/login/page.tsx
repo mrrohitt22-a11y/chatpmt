@@ -2,8 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import { useSupabaseAuth } from '@/hooks/use-supabase-auth';
+import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
+import { useAuth, useFirestore } from '@/firebase/provider';
+import {
+  initiateGoogleSignIn,
+  initiateGithubSignIn,
+  initiateEmailSignUp,
+  initiateEmailSignIn,
+  initiateAnonymousSignIn,
+} from '@/firebase/non-blocking-login';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { updateProfile } from 'firebase/auth';
 import { Navigation } from '@/components/Navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +22,9 @@ import { Loader2, Mail, Github, UserCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 export default function LoginPage() {
-  const { user, isLoading: isUserLoading } = useSupabaseAuth();
+  const { user, isLoading: isUserLoading } = useFirebaseAuth();
+  const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -30,22 +41,22 @@ export default function LoginPage() {
     if (user && !isUserLoading) {
       const initializeProfileAndRedirect = async () => {
         try {
-          // Initialize user profile in Supabase Database
-          const { error } = await supabase
-            .from('userProfiles')
-            .upsert({
-              id: user.id,
+          // Check if user profile exists in Firestore
+          const profileRef = doc(firestore, 'userProfiles', user.uid);
+          const profileSnap = await getDoc(profileRef);
+          
+          if (!profileSnap.exists()) {
+            // Create new profile
+            await setDoc(profileRef, {
               email: user.email || '',
-              displayName: user.user_metadata?.full_name || displayName || 'Creative User',
+              displayName: user.displayName || displayName || 'Creative User',
               preferredLanguage: 'English',
               remainingDailyFreePrompts: 3,
               lastFreePromptResetDate: new Date().toISOString(),
               creditsBalance: 0,
-              updatedAt: new Date().toISOString()
-            }, { onConflict: 'id' });
-            
-          if (error) {
-            console.error("Profile initialization failed:", error);
+              updatedAt: new Date().toISOString(),
+              createdAt: new Date().toISOString(),
+            });
           }
           
           router.push('/');
@@ -56,14 +67,15 @@ export default function LoginPage() {
       };
       initializeProfileAndRedirect();
     }
-  }, [user, isUserLoading, router, displayName]);
+  }, [user, isUserLoading, router, displayName, firestore]);
 
   const handleAuthError = (error: any) => {
     setIsLoading(false);
     
     let message = error?.message || "An error occurred during authentication.";
-    if (message.toLowerCase().includes('already registered')) message = "Email already registered. Try logging in.";
+    if (message.toLowerCase().includes('already')) message = "Email already registered. Try logging in.";
     if (message.toLowerCase().includes('invalid')) message = "Invalid email or password.";
+    if (message.toLowerCase().includes('weak-password')) message = "Password should be at least 6 characters.";
     
     toast({
       variant: "destructive",
@@ -82,23 +94,16 @@ export default function LoginPage() {
     setIsLoading(true);
     try {
       if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              full_name: displayName || email.split('@')[0],
-            }
-          }
-        });
-        if (error) throw error;
-        toast({ title: "Success", description: "Account created! Please verify your email if needed, or you are logged in." });
+        const credential = await initiateEmailSignUp(auth, email, password);
+        // Update display name
+        if (displayName && credential.user) {
+          await updateProfile(credential.user, {
+            displayName: displayName || email.split('@')[0],
+          });
+        }
+        toast({ title: "Success", description: "Account created successfully!" });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
-        if (error) throw error;
+        await initiateEmailSignIn(auth, email, password);
       }
     } catch (error: any) {
       handleAuthError(error);
@@ -108,13 +113,7 @@ export default function LoginPage() {
   const handleGoogleLogin = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/login` : '',
-        }
-      });
-      if (error) throw error;
+      await initiateGoogleSignIn(auth);
     } catch (error: any) {
       handleAuthError(error);
     }
@@ -123,13 +122,7 @@ export default function LoginPage() {
   const handleGithubLogin = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'github',
-        options: {
-          redirectTo: typeof window !== 'undefined' ? `${window.location.origin}/login` : '',
-        }
-      });
-      if (error) throw error;
+      await initiateGithubSignIn(auth);
     } catch (error: any) {
       handleAuthError(error);
     }
@@ -138,8 +131,7 @@ export default function LoginPage() {
   const handleGuestLogin = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase.auth.signInAnonymously();
-      if (error) throw error;
+      await initiateAnonymousSignIn(auth);
     } catch (error: any) {
       handleAuthError(error);
     }

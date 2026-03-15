@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Sparkles, History, Menu, LogOut, User as UserIcon, Moon, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useSupabaseAuth } from '@/hooks/use-supabase-auth';
-import { supabase } from '@/lib/supabase';
+import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
+import { useAuth } from '@/firebase/provider';
+import { signOut } from 'firebase/auth';
 import { useTheme } from 'next-themes';
 import {
   DropdownMenu,
@@ -19,7 +20,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { HistorySheet } from '@/components/HistorySheet';
 
 export function Navigation() {
-  const { user, isLoading: isUserLoading } = useSupabaseAuth();
+  const { user, isLoading: isUserLoading } = useFirebaseAuth();
+  const auth = useAuth();
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -30,7 +32,7 @@ export function Navigation() {
   }, []);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
+    await signOut(auth);
   };
 
   return (
@@ -84,9 +86,9 @@ export function Navigation() {
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                       <Avatar className="h-10 w-10 border border-primary/20">
-                        <AvatarImage src={user.user_metadata?.avatar_url || `https://picsum.photos/seed/${user.id}/100/100`} alt={user.user_metadata?.full_name || ''} />
+                        <AvatarImage src={user.photoURL || `https://picsum.photos/seed/${user.uid}/100/100`} alt={user.displayName || ''} />
                         <AvatarFallback className="bg-primary/10 text-primary font-bold">
-                          {user.user_metadata?.full_name?.charAt(0) || user.email?.charAt(0) || 'U'}
+                          {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
                         </AvatarFallback>
                       </Avatar>
                     </Button>
@@ -94,7 +96,7 @@ export function Navigation() {
                   <DropdownMenuContent className="w-56" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-bold leading-none">{user.user_metadata?.full_name || 'User'}</p>
+                        <p className="text-sm font-bold leading-none">{user.displayName || 'User'}</p>
                         <p className="text-xs leading-none text-muted-foreground">{user.email || 'Anonymous'}</p>
                       </div>
                     </DropdownMenuLabel>

@@ -20,8 +20,9 @@ import {
   Clock,
   Sparkles
 } from 'lucide-react';
-import { useSupabaseAuth } from '@/hooks/use-supabase-auth';
-import { supabase } from '@/lib/supabase';
+import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
+import { useFirestore } from '@/firebase/provider';
+import { collection, query, where, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 
@@ -31,7 +32,8 @@ interface HistorySheetProps {
 }
 
 export function HistorySheet({ isOpen, onOpenChange }: HistorySheetProps) {
-  const { user } = useSupabaseAuth();
+  const { user } = useFirebaseAuth();
+  const firestore = useFirestore();
   const { toast } = useToast();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   
@@ -41,19 +43,28 @@ export function HistorySheet({ isOpen, onOpenChange }: HistorySheetProps) {
   useEffect(() => {
     if (user && isOpen) {
       setIsLoading(true);
-      supabase
-        .from('prompts')
-        .select('*')
-        .eq('userId', user.id)
-        .order('createdAt', { ascending: false })
-        .then(({ data, error }) => {
-          if (!error && data) {
-            setHistory(data);
-          }
+      const loadHistory = async () => {
+        try {
+          const q = query(
+            collection(firestore, 'prompts'),
+            where('userId', '==', user.uid),
+            orderBy('createdAt', 'desc')
+          );
+          const snapshot = await getDocs(q);
+          const items = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+          }));
+          setHistory(items);
+        } catch (error) {
+          console.error("Error loading history:", error);
+        } finally {
           setIsLoading(false);
-        });
+        }
+      };
+      loadHistory();
     }
-  }, [user, isOpen]);
+  }, [user, isOpen, firestore]);
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -68,13 +79,11 @@ export function HistorySheet({ isOpen, onOpenChange }: HistorySheetProps) {
   const handleDelete = async (id: string) => {
     if (!user) return;
     
-    const { error } = await supabase
-      .from('prompts')
-      .delete()
-      .eq('id', id);
-
-    if (!error) {
+    try {
+      await deleteDoc(doc(firestore, 'prompts', id));
       setHistory((prev) => prev.filter(item => item.id !== id));
+    } catch (error) {
+      console.error("Error deleting prompt:", error);
     }
     
     toast({

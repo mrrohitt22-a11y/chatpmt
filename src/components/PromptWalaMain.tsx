@@ -51,8 +51,9 @@ import {
   detectLanguageAndTranslatePrompt,
 } from '@/ai/flows/detect-language-and-translate-prompt';
 import Link from 'next/link';
-import { useSupabaseAuth } from '@/hooks/use-supabase-auth';
-import { supabase } from '@/lib/supabase';
+import { useFirebaseAuth } from '@/hooks/use-firebase-auth';
+import { useFirestore } from '@/firebase/provider';
+import { doc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { cn } from '@/lib/utils';
 
 const PROMPT_TYPES = [
@@ -103,7 +104,8 @@ export function PromptWalaMain({ presetIdea, presetType }: PromptWalaMainProps) 
   const [isCopied, setIsCopied] = useState(false);
   const { toast } = useToast();
 
-  const { user } = useSupabaseAuth();
+  const { user } = useFirebaseAuth();
+  const firestore = useFirestore();
   const [userProfile, setUserProfile] = useState<any>(null);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
 
@@ -112,12 +114,11 @@ export function PromptWalaMain({ presetIdea, presetType }: PromptWalaMainProps) 
       setIsProfileLoading(true);
       const loadProfile = async () => {
         try {
-          const { data } = await supabase
-            .from('userProfiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-          if (data) setUserProfile(data);
+          const profileRef = doc(firestore, 'userProfiles', user.uid);
+          const profileSnap = await getDoc(profileRef);
+          if (profileSnap.exists()) {
+            setUserProfile(profileSnap.data());
+          }
         } catch (e) {
           console.error("Error loading profile", e);
         } finally {
@@ -126,7 +127,7 @@ export function PromptWalaMain({ presetIdea, presetType }: PromptWalaMainProps) 
       };
       loadProfile();
     }
-  }, [user]);
+  }, [user, firestore]);
 
   const credits = userProfile?.remainingDailyFreePrompts ?? 3;
   const isPro = userProfile?.creditsBalance ? userProfile.creditsBalance > 0 : false;
@@ -207,20 +208,23 @@ export function PromptWalaMain({ presetIdea, presetType }: PromptWalaMainProps) 
 
       setResult(generatedText);
 
+      // Save to Firestore
       if (user) {
-        supabase.from('prompts').insert({
-          userId: user.id,
-          inputIdea: idea,
-          generatedPromptText: generatedText,
-          promptType,
-          qualityLevel,
-          outputLanguage: targetLanguage,
-          createdAt: new Date().toISOString(),
-          isArchived: false,
-          detectedInputLanguage: 'unknown'
-        }).then(({ error }) => {
-          if (error) console.error("Failed to save history to Supabase:", error);
-        });
+        try {
+          await addDoc(collection(firestore, 'prompts'), {
+            userId: user.uid,
+            inputIdea: idea,
+            generatedPromptText: generatedText,
+            promptType,
+            qualityLevel,
+            outputLanguage: targetLanguage,
+            createdAt: new Date().toISOString(),
+            isArchived: false,
+            detectedInputLanguage: 'unknown'
+          });
+        } catch (err) {
+          console.error("Failed to save history to Firestore:", err);
+        }
       }
       
       toast({
