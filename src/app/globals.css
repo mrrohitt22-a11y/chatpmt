@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 98%;
+    --foreground: 25 40% 12%;
+    --card: 40 33% 100%;
+    --card-foreground: 25 40% 12%;
+    --popover: 40 33% 100%;
+    --popover-foreground: 25 40% 12%;
+    --primary: 45 40% 92%; /* Bright Creamy */
+    --primary-foreground: 25 40% 10%;
+    --secondary: 40 30% 96%;
+    --secondary-foreground: 25 40% 20%;
+    --muted: 40 20% 94%;
+    --muted-foreground: 25 10% 45%;
+    --accent: 45 40% 92%;
+    --accent-foreground: 25 40% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 40 20% 90%;
+    --input: 40 20% 90%;
+    --ring: 45 40% 80%;
+    --radius: 1.5rem;
+  }
+
+  .dark {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 3%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 3%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 0% 100%; /* Pure white primary in dark mode */
+    --primary-foreground: 0 0% 0%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 0 0% 100%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground font-body antialiased selection:bg-primary/50;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+@layer utilities {
+  .transition-soft {
+    @apply transition-all duration-300 ease-out;
+  }
+  .hover-lift {
+    @apply hover:-translate-y-1 hover:shadow-xl transition-soft;
+  }
+  .glass-card {
+    @apply bg-white/70 dark:bg-black/40 backdrop-blur-md border border-white/40 dark:border-white/10;
+  }
+}

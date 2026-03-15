@@ -1,0 +1,16 @@
+{
+  "placeholderImages": [
+    {
+      "id": "hero-abstract",
+      "description": "Abstract creative brain waves",
+      "imageUrl": "https://images.unsplash.com/photo-1519001904187-92788a1b784d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxjcmVhdGl2ZSUyMGlkZWElMjBicmFpbnxlbnwwfHx8fDE3NzA4MTY0NTR8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "creative idea brain"
+    },
+    {
+      "id": "ai-workspace",
+      "description": "Modern workspace with AI interfaces",
+      "imageUrl": "https://images.unsplash.com/photo-1677691820099-a6e8040aa077?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxBSSUyMHRlY2hub2xvZ3klMjB3b3Jrc3BhY2V8ZW58MHx8fHwxNzcwODE2NDU0fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "AI technology workspace"
+    }
+  ]
+}
