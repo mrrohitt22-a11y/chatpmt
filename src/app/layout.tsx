@@ -3,6 +3,7 @@ import Script from 'next/script';
 import './globals.css';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'ChatPMT - Convert Ideas into High-Value AI Prompts',
@@ -21,7 +22,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
-      <body className="font-body antialiased selection:bg-primary selection:text-primary-foreground transform-gpu transition-colors duration-300">
+      <body className="font-body antialiased selection:bg-primary selection:text-primary-foreground transform-gpu transition-colors duration-300 bg-gradient-to-br from-background via-muted/20 to-secondary/30 animate-gradient-slow">
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -30,6 +31,7 @@ export default function RootLayout({
         >
           <FirebaseClientProvider>
             {children}
+            <Toaster />
           </FirebaseClientProvider>
         </ThemeProvider>
         <Script

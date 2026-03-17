@@ -146,18 +146,18 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-background text-foreground">
       <Navigation />
       
       <div className="container mx-auto max-w-md px-4 py-20 flex flex-col items-center">
         <div className="w-full space-y-8">
           <div className="text-left space-y-2">
-            <h1 className="text-3xl font-bold text-black">{mode === 'signup' ? 'Create Account' : 'Welcome Back'}</h1>
+            <h1 className="text-3xl font-bold text-foreground">{mode === 'signup' ? 'Create Account' : 'Welcome Back'}</h1>
             <p className="text-sm text-muted-foreground">
               {mode === 'signup' ? 'Already have an account?' : "Don't have an account?"}{' '}
               <button 
                 onClick={() => { setMode(mode === 'signup' ? 'login' : 'signup'); setShowEmailForm(false); }}
-                className="text-black font-semibold underline hover:text-primary transition-colors"
+                className="text-foreground font-semibold underline hover:text-primary transition-colors"
               >
                 {mode === 'signup' ? 'Log in' : 'Sign up'}
               </button>
@@ -216,7 +216,7 @@ export default function LoginPage() {
                   <Label htmlFor="password" className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Password</Label>
                   <Input id="password" type="password" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required className="h-12 border-muted rounded-xl" />
                 </div>
-                <Button className="w-full font-bold h-12 bg-black text-white hover:bg-black/90 rounded-xl" type="submit" disabled={isLoading}>
+                <Button className="w-full font-bold h-12 bg-foreground text-background hover:bg-foreground/90 rounded-xl shadow-md" type="submit" disabled={isLoading}>
                   {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (mode === 'signup' ? 'Create Account' : 'Sign In')}
                 </Button>
                 <Button variant="ghost" size="sm" className="w-full text-xs text-muted-foreground" onClick={() => setShowEmailForm(false)}>
@@ -231,14 +231,14 @@ export default function LoginPage() {
               <span className="w-full border-t border-muted" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-muted-foreground">Or</span>
+              <span className="bg-background px-2 text-muted-foreground">Or</span>
             </div>
           </div>
 
           <div className="text-center">
             <Button 
-              variant="ghost" 
-              className="text-sm font-semibold text-black hover:bg-muted/50 w-full h-12 rounded-xl gap-2" 
+              variant="outline" 
+              className="text-sm font-semibold text-foreground hover:bg-muted/50 w-full h-12 rounded-xl gap-2 shadow-sm border-border" 
               onClick={handleGuestLogin}
               disabled={isLoading}
             >
@@ -256,7 +256,7 @@ export default function LoginPage() {
                 className="mt-1 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
               <Label htmlFor="terms" className="text-sm text-muted-foreground leading-tight">
-                I agree to the <span className="text-black underline cursor-pointer">Terms and Conditions</span> and <span className="text-black underline cursor-pointer">Privacy Policy</span>.
+                I agree to the <span className="text-foreground underline cursor-pointer hover:text-primary transition-colors">Terms and Conditions</span> and <span className="text-foreground underline cursor-pointer hover:text-primary transition-colors">Privacy Policy</span>.
               </Label>
             </div>
           </div>
