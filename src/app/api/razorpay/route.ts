@@ -2,13 +2,23 @@ import { NextResponse } from 'next/server';
 import Razorpay from 'razorpay';
 import crypto from 'crypto';
 
-const razorpay = new Razorpay({
-  key_id: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || '',
-  key_secret: process.env.RAZORPAY_KEY_SECRET || '',
-});
+export const dynamic = 'force-dynamic';
 
 export async function POST(req: Request) {
   try {
+    const key_id = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!key_id || !key_secret) {
+      console.error("Razorpay API keys are not configured in environment variables");
+      return NextResponse.json({ error: "Server configuration missing" }, { status: 500 });
+    }
+
+    const razorpay = new Razorpay({
+      key_id,
+      key_secret,
+    });
+
     const { amount, currency, receipt } = await req.json();
 
     const order = await razorpay.orders.create({
